@@ -145,7 +145,7 @@ wsapi.setSend(packet => ws.send(packet));
 ws.onmessage = function (event) {
   // this checks if the received packet is a wsapi packet
   if (event.data._wsapiId) {
-    api.resolvePacket(event.packet.data);
+    return api.resolvePacket(event.packet.data);
   }
   
   // ... your existing message handling

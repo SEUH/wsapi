@@ -16,6 +16,8 @@ let user = await wsapi.call('/user');
 
 ## Usage
 
+**If you already send your own packets over the socket, check out the [invasive mode](#invasive-mode-showcase)**
+
 WSApi requires a send function. If you call wsapi.call(), WSApi will call the send function.
 
 ```js
@@ -115,7 +117,7 @@ Since invasive mode uses your packet, it only adds two field to your provided pa
 }
 ```
 
-## Invasive mode example
+## Invasive mode showcase
 
 For example if you already send custom packets over a socket connection, you can use invasive-mode. This allows you to use wsapi side by side your existing code.
 

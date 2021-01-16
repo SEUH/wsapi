@@ -124,9 +124,10 @@ For example if you already send custom packets over a socket connection, you can
 ```js
 // For example we want to create a new user. For this, we send a 'user:create'
 // packet over a socket. Now normally we don't get any return value from 'ws.send'
-// so wen need to implement our custom logic in the ws.onmessage function. If we
+// so we need to implement custom logic in the 'ws.onmessage' function. If we
 // use WSApi, we don't need to do this.
 
+// old way to create a user
 let exampleUserPacket = {
   type: 'user:create',
   attributes: {/* ... */}
@@ -142,7 +143,7 @@ wsapi.setSend(packet => ws.send(packet));
 ws.onmessage = function (event) {
   // this checks if the received packet is a wsapi packet
   if (event.data._wsapiId) {
-    api.resolvePacket(packet);
+    api.resolvePacket(event.packet.data);
   }
   
   // ... your existing message handling

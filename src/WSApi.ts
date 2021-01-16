@@ -30,15 +30,15 @@ export enum WSApiStatus {
 export class WSApi {
     private handles = new Map<number, [(value) => {}, (error) => {}]>();
     private readonly invasive: boolean = false;
-    private send: (packet) => {};
+    private sendFunc: (...args) => {};
     
     constructor(invasive?, send?) {
         this.invasive = invasive;
-        this.send = send;
+        this.sendFunc = send;
     }
     
     setSend(send) {
-        this.send = send;
+        this.sendFunc = send;
         return this;
     }
     
@@ -47,32 +47,41 @@ export class WSApi {
         this.handles.set(id, promise);
     }
     
-    async sendPacket(packet, callback?) {
-        if (!this.send) {
+    async sendPacket(...args) {
+        if (!this.sendFunc) {
             throw new Error('WSApi: No send function defined!');
         }
         
-        if (callback) {
-            return this.setHandle(packet, [
-                value => callback(value),
-                error => callback(undefined, error),
-            ])
-        }
+        // TODO maybe add option to use callbacks instead of promises
+        //      f.e. cb = true -> args[last] = is callback func
+        //           args.length < 2 -> throw error 'no cb arg'
+        // if (callback) {
+        //     return this.setHandle(packet, [
+        //         value => callback(value),
+        //         error => callback(undefined, error),
+        //     ])
+        // }
         
         return new Promise(((...rest) => {
-            this.setHandle(packet, rest);
-            this.send(packet);
+            this.setHandle(args[args.length - 1], rest);
+            this.sendFunc(...args);
         }));
     }
     
-    async call(data, callback?) {
-        return this.sendPacket(this.create(data), callback);
+    async call(...args) {
+        args[args.length - 1] = this.create(args[args.length - 1]);
+        return this.sendPacket(...args);
+    }
+    
+    send(...args) {
+        return this.sendFunc(...args);
     }
     
     resolvePacket(packet: IWSApiResponse | IWSApiResponseInvasive) {
         let id = this.invasive ? (<IWSApiResponseInvasive>packet)._wsapiId : packet.id;
         let promise = this.handles.get(id);
-    
+        this.handles.delete(id);
+        
         let status = this.invasive ? (<IWSApiResponseInvasive>packet)._wsapiStatus : packet.status;
         if (status === WSApiStatus.RESOLVED) {
             promise[0](this.invasive ? packet : packet.data);

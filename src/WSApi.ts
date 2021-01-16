@@ -1,14 +1,23 @@
 export type IWSApiCall = {
     id: number,
-    type: 'wsapi:call',
     data: any,
+}
+
+export type IWSApiCallInvasive = {
+    [key: string]: any,
+    _wsapiId: number,
 }
 
 export type IWSApiResponse = {
     id: number,
-    type: 'wsapi:response',
     status: WSApiStatus,
     data: any,
+}
+
+export type IWSApiResponseInvasive = {
+    [key: string]: any,
+    _wsapiId: number,
+    _wsapiStatus: WSApiStatus,
 }
 
 export enum WSApiStatus {
@@ -18,17 +27,21 @@ export enum WSApiStatus {
 
 export class WSApi {
     private handles = new Map<number, [(value) => {}, (error) => {}]>();
+    private readonly invasive: boolean = false;
     private send: (packet) => {};
     
-    constructor(send?) {
+    constructor(invasive?, send?) {
+        this.invasive = invasive;
         this.send = send;
     }
     
     setSend(send) {
         this.send = send;
+        return this;
     }
     
-    private setHandle(id, promise) {
+    private setHandle(packet, promise) {
+        let id = this.invasive ? (<IWSApiResponseInvasive>packet)._wsapiId : packet.id;
         this.handles.set(id, promise);
     }
     
@@ -38,14 +51,14 @@ export class WSApi {
         }
         
         if (callback) {
-            return this.setHandle(packet.id, [
+            return this.setHandle(packet, [
                 value => callback(value),
                 error => callback(undefined, error),
             ])
         }
         
         return new Promise(((...rest) => {
-            this.setHandle(packet.id, rest);
+            this.setHandle(packet, rest);
             this.send(packet);
         }));
     }
@@ -54,22 +67,31 @@ export class WSApi {
         return this.sendPacket(this.create(data), callback);
     }
     
-    resolvePacket(packet: IWSApiResponse) {
-        let promise = this.handles.get(packet.id);
-        
-        if (packet.status === WSApiStatus.RESOLVED) {
-            promise[0](packet.data);
-        } else if (packet.status === WSApiStatus.REJECTED) {
-            promise[1](packet.data);
+    resolvePacket(packet: IWSApiResponse | IWSApiResponseInvasive) {
+        let id = this.invasive ? (<IWSApiResponseInvasive>packet)._wsapiId : packet.id;
+        let promise = this.handles.get(id);
+    
+        let status = this.invasive ? (<IWSApiResponseInvasive>packet)._wsapiStatus : packet.status;
+        if (status === WSApiStatus.RESOLVED) {
+            promise[0](this.invasive ? packet : packet.data);
+        } else if (status === WSApiStatus.REJECTED) {
+            promise[1](this.invasive ? packet : packet.data);
         } else {
-            throw new Error('WSApi: Unknown resolve packet status: ' + packet.status);
+            throw new Error('WSApi: Unknown resolve packet status: ' + status);
         }
     }
     
-    create(object): IWSApiCall {
+    create(object): IWSApiCall | IWSApiCallInvasive {
+        if (this.invasive) {
+            return {
+                ...object,
+                _wsapiId: this.getRandomId(),
+                _wsapiType: 'wsapi:call',
+            }
+        }
+        
         return {
             id: this.getRandomId(),
-            type: 'wsapi:call',
             data: object,
         };
     }
@@ -77,9 +99,16 @@ export class WSApi {
     static createResponse(forPacket, status, data): IWSApiResponse {
         return {
             id: forPacket.id,
-            type: 'wsapi:response',
             status,
             data,
+        }
+    }
+    
+    static createInvasiveResponse(forPacket, status, data): IWSApiResponseInvasive {
+        return {
+            ...data,
+            _wsapiId: forPacket._wsapiId,
+            _wsapiStatus: status,
         }
     }
     

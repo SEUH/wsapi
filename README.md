@@ -122,7 +122,10 @@ Since invasive mode uses your packet, it only adds two field to your provided pa
 For example if you already send custom packets over a socket connection, you can use invasive-mode. This allows you to use WSApi beside your already existing code.
 
 ```js
-// For example we want to create a new user. For this, we send a 'user:create' packet over a socket. Now normally we don't get any return value from 'ws.send' so wen need to implement our custom logic in the ws.onmessage function. If we use WSApi, we don't need to do this.
+// For example we want to create a new user. For this, we send a 'user:create'
+// packet over a socket. Now normally we don't get any return value from 'ws.send'
+// so wen need to implement our custom logic in the ws.onmessage function. If we
+// use WSApi, we don't need to do this.
 
 let exampleUserPacket = {
   type: 'user:create',

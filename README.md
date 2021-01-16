@@ -18,6 +18,8 @@ let user = await wsapi.call('/user');
 
 **If you already send your own packets over the socket, check out the [invasive mode](#invasive-mode-showcase)**
 
+**If you use [socket.io](https://socket.io), you can continue reading on [WSApi socket.io proof-of-concept](https://github.com/SEUH/wsapi-socketio) after you have read this.**
+
 WSApi requires a send function. If you call wsapi.call(), WSApi will call the send function.
 
 ```js

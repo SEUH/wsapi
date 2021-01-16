@@ -1,5 +1,6 @@
 export type IWSApiCall = {
     id: number,
+    type: 'wsapi',
     data: any,
 }
 
@@ -10,6 +11,7 @@ export type IWSApiCallInvasive = {
 
 export type IWSApiResponse = {
     id: number,
+    type: 'wsapi',
     status: WSApiStatus,
     data: any,
 }
@@ -86,12 +88,13 @@ export class WSApi {
             return {
                 ...object,
                 _wsapiId: this.getRandomId(),
-                _wsapiType: 'wsapi:call',
+                _wsapiType: 'wsapi',
             }
         }
         
         return {
             id: this.getRandomId(),
+            type: 'wsapi',
             data: object,
         };
     }
@@ -99,6 +102,7 @@ export class WSApi {
     static createResponse(forPacket, status, data): IWSApiResponse {
         return {
             id: forPacket.id,
+            type: 'wsapi',
             status,
             data,
         }
@@ -108,6 +112,7 @@ export class WSApi {
         return {
             ...data,
             _wsapiId: forPacket._wsapiId,
+            _wsapiType: 'wsapi',
             _wsapiStatus: status,
         }
     }

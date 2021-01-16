@@ -127,6 +127,8 @@ For example if you already send custom packets over a socket connection, you can
 // so we need to implement custom logic in the 'ws.onmessage' function. If we
 // use WSApi, we don't need to do this.
 
+const ws = new WebSocket('...');
+
 // old way to create a user
 let exampleUserPacket = {
   type: 'user:create',
